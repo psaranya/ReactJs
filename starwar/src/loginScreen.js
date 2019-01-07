@@ -11,8 +11,19 @@ class loginScreen extends React.Component {
             username: '',
             password: '',
             users: [],
+            loginUsers : [],
             submitted: false
         };
+        var proxyUrl = 'https://cors-anywhere.herokuapp.com/',
+        targetUrl = 'http://swapi.co/api/people'
+    
+        fetch(proxyUrl + targetUrl).then(res => res.json())
+        .then(json => {
+            console.log(json.results)
+               this.setState({
+                loginUsers : json.results,
+            })
+        });
 
        // this.listUsers();
         this.handleChange = this.handleChange.bind(this);
@@ -21,9 +32,7 @@ class loginScreen extends React.Component {
 
     componentDidMount(){
        
-       // return this.props.loginusers.map((user) =>{
-            console.log(this.props.loginusers);
-      //  })
+        
     }
 
     handleChange(e) {
@@ -33,9 +42,9 @@ class loginScreen extends React.Component {
 
     handleSubmit(e) {
         e.preventDefault();
-        this.setState({ submitted: true });
-        const { username, password } = this.state;
-        const filteredUser = this.props.loginusers.some(user =>{
+        this.setState({ submitted: true }); 
+        const { username, password,loginUsers } = this.state;
+        const filteredUser = loginUsers.some(user =>{
             return (user.name === username && user.birth_year === password)
        })
          
@@ -44,7 +53,7 @@ class loginScreen extends React.Component {
         this.setState({loginUser : filteredUser});
       
         if(filteredUser){
-            const userDetails = this.props.loginusers.filter(user =>{
+            const userDetails = loginUsers.filter(user =>{
                 return user.name.indexOf(username) !== -1
             })
             this.props.loginuser(userDetails);
@@ -94,10 +103,10 @@ class loginScreen extends React.Component {
         return bindActionCreators({loginuser:loginuser},dispatch)
       }
 
- function mapstateToProps(state){
-     return {
-         loginusers :state.loginusers
-     }; 
- }
+ //function mapstateToProps(state){
+ //    return {
+   //      loginusers :state.loginusers
+   //  }; 
+ //}
 
- export default connect(mapstateToProps,mapDispatchToProps)(loginScreen);
+ export default connect(null,mapDispatchToProps)(loginScreen);
