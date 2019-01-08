@@ -36,7 +36,18 @@ onChange = e =>{
     })
     if(this.state.counter > 15 && (this.props.loginuser.user[0].name != 'Luke Skywalker')){
         this.state.userDisable = true;
+        document.getElementById("input").disabled = true;
     }
+
+    let timerId = setTimeout(() => {
+        if(this.state.userDisable === true && this.state.counter > 2){
+            this.state.userDisable = false;
+            document.getElementById("input").disabled = false;
+            this.state.counter=0;
+          
+        }
+    }, 1000*60);
+
 }
 
 onClick(planet){
@@ -74,10 +85,10 @@ history.push('/planet');
               <div className="search__title"><h3>Search by Planets </h3></div>
               
               <div class="active-pink-4 mb-4">
-              <input disabled={this.state.userDisable} class="form-control" type="text" placeholder="Search" aria-label="Search" onChange={this.onChange}
+              <input id="input" disabled={this.state.userDisable} class="form-control" type="text" placeholder="Search" aria-label="Search" onChange={this.onChange}
                   autoFocus></input>
                {this.state.userDisable &&
-                            <div className="help-block">{this.props.loginuser.user[0].name} cannot search more than 15 times...</div>
+                            <div className="help-block">{this.props.loginuser.user[0].name} cannot search more than 15 times in a minute.Try after one minute..</div>
                         }  
                 <div>
                 <div>

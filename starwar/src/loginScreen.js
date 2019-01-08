@@ -30,10 +30,7 @@ class loginScreen extends React.Component {
         this.handleSubmit = this.handleSubmit.bind(this);
    }
 
-    componentDidMount(){
-       
-        
-    }
+
 
     handleChange(e) {
         const { name, value } = e.target;
