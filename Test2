@@ -1,0 +1,34 @@
+private void validateCashUnitStocks(CashStocksActivateContextRequest request) throws CashException {
+    log.info("Validating Cash Unit Stocks for CashStockId: {}", request.getCashStockId());
+
+    // Fetch the last closed Cash Stock Session
+    CashStockSession lastSession = cashStockSessionRepository.findLastClosedSession(Long.valueOf(request.getCashStockId()))
+            .orElseThrow(() -> new CashException("KASH_10000006", "No previous Cash Stock Session found.", HttpStatus.BAD_REQUEST, "Validation error", ""));
+
+    // Fetch previous Cash Unit Stocks
+    List<CashUnitStock> lastCashUnitStocks = cashUnitStockRepository.findByCashStockSessionId(lastSession.getId());
+
+    // Convert last session's cash units to a map (CashUnitId -> Quantity)
+    Map<Long, Integer> lastUnitStockMap = lastCashUnitStocks.stream()
+            .collect(Collectors.toMap(stock -> stock.getCashUnit().getId(), CashUnitStock::getQuantity));
+
+    // Convert current request's cash units to a map (CashUnitId -> Quantity)
+    Map<Long, Integer> requestUnitStockMap = request.getCashUnitStockContextList().stream()
+            .collect(Collectors.toMap(stock -> convertToLong(stock.getCashUnitId()), CashUnitStockContext::getCashUnitStockQuantity));
+
+    // Validate that the cash units in the request match the last session
+    if (!lastUnitStockMap.keySet().equals(requestUnitStockMap.keySet())) {
+        throw new CashException("KASH_10000007", "Cash Unit Stock list does not match the last recorded session.", HttpStatus.BAD_REQUEST, "Validation error", "");
+    }
+
+    // Validate total amount matches the CashStockOperationAmount
+    BigInteger calculatedAmount = request.getCashUnitStockContextList().stream()
+            .map(stock -> BigInteger.valueOf(stock.getCashUnitStockQuantity()).multiply(BigInteger.valueOf(stock.getDenomination())))
+            .reduce(BigInteger.ZERO, BigInteger::add);
+
+    if (!calculatedAmount.equals(BigInteger.valueOf(request.getCashStockOperationAmount()))) {
+        throw new CashException("KASH_10000008", "Total amount of Cash Unit Stocks does not match CashStockOperationAmount.", HttpStatus.BAD_REQUEST, "Validation error", "");
+    }
+
+    log.info("Validation successful for CashStockId: {}", request.getCashStockId());
+}
